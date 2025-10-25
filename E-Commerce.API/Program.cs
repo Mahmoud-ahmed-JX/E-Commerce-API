@@ -1,5 +1,9 @@
 
 using Domain.Contracts;
+using E_Commerce.API.Extensions;
+using E_Commerce.API.Factories;
+using E_Commerce.API.Middlewares;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Presistence.Data;
 using Presistence.Repositories;
@@ -16,42 +20,31 @@ namespace E_Commerce.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            #region DI
             // Add services to the container.
+            builder.Services.AddWebApiServices();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
-            builder.Services.AddSwaggerGen(C =>
-            {
-                C.SwaggerDoc("v1", new() { Title = "E-Commerce API", Version = "v1" });
-            });
+            builder.Services.AddInfrastructureServices(builder.Configuration);
 
-            builder.Services.AddDbContext<StoreDbContext>(options =>
-            {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-            });
-            builder.Services.AddAutoMapper(cfg => { },typeof(AssemblyReference).Assembly); 
+            builder.Services.AddCoreServices();
+            #endregion
 
-            builder.Services.AddScoped<IDataSeeding, DataSeeding>();
-            builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
-            builder.Services.AddScoped<IServiceManager, ServiceManager>();
 
+            #region PipeLine - Middlewares
             using var app = builder.Build();
-            var scope= app.Services.CreateScope();
-            var ObjectSeeding=scope.ServiceProvider.GetRequiredService<IDataSeeding>();
-            await ObjectSeeding.SeedDataAsync();
+            await app.SeedDataAsync();
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
-                app.MapOpenApi();
-                app.UseSwagger();
-                app.UseSwaggerUI(options =>
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Restaurant API v1");
-                    options.RoutePrefix = string.Empty; // Optional: makes Swagger the home page
-                });
             {
+                app.MapOpenApi();
+                app.UseSwaggerMiddleware();
+
             }
 
+
+
+
+            app.AddExceptionHandlingMiddleware();
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
@@ -59,7 +52,8 @@ namespace E_Commerce.API
 
             app.MapControllers();
 
-            app.Run();
+            app.Run(); 
+            #endregion
         }
     }
 }
