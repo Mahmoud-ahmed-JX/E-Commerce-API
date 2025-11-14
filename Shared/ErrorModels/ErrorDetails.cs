@@ -10,7 +10,7 @@ namespace Shared.ErrorModels
     {
         public int StatusCode { get; set; }
         public string Message { get; set; } = string.Empty;
-
+        public IEnumerable<string>? Errors { get; set; }
         public override string ToString()
         {
             return System.Text.Json.JsonSerializer.Serialize(this);

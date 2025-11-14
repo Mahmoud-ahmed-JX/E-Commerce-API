@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Domain.Entities.BasketModule;
 using Domain.Entities.ProductModule;
-using Shared.Dtos;
+using Shared.Dtos.BasketDtos;
+using Shared.Dtos.ProductDtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +22,7 @@ namespace Services.MappingProfiles
             CreateMap<ProductBrand, BrandResultDto>();
             CreateMap<ProductType,TypeResultDto>();
 
+           
         }
     }
 }

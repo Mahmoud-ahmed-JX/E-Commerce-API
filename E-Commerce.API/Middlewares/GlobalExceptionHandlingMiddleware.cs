@@ -44,19 +44,28 @@ namespace E_Commerce.API.Middlewares
 
         private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
+            context.Response.ContentType = "application/json";
+            var response = new ErrorDetails()
+            {
+                Message = ex.Message
+            };
             context.Response.StatusCode = ex switch
             {
                 NotFoundException => StatusCodes.Status404NotFound,
+                UnauthorizedException => StatusCodes.Status401Unauthorized,
+                ValidationException validationException=> HandleValidationException(validationException, response),
                 (_) => StatusCodes.Status500InternalServerError
-            };
-            context.Response.ContentType= "application/json";
-            var respone = new ErrorDetails()
-            {
-                StatusCode = context.Response.StatusCode,
-                Message = ex.Message
-            }.ToString();
-            await context.Response.WriteAsync(respone);
+            }; 
+           
+          
+            await context.Response.WriteAsync(response.ToString());
 
+        }
+
+        private int HandleValidationException(ValidationException validationException, ErrorDetails respones)
+        {
+            respones.Errors = validationException.Errors;
+            return StatusCodes.Status400BadRequest;
         }
     }
 }
